@@ -13,3 +13,6 @@ Desenvolvimento do algoritmo de Hirschberg para resolver problema de alinhamento
 
 # The Huxley
 - https://thehuxley.com/problem/4842
+
+# Ferramentas auxiliares
+- https://bioboot.github.io/bimm143_W20/class-material/nw/
