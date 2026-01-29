@@ -16,3 +16,6 @@ Desenvolvimento do algoritmo de Hirschberg para resolver problema de alinhamento
 
 # Ferramentas auxiliares
 - https://bioboot.github.io/bimm143_W20/class-material/nw/
+
+# Referências para o projeto
+- https://dl.acm.org/doi/pdf/10.1145/360825.360861 (Artigo original do Hirschberg)

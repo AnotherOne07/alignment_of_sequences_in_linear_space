@@ -3,6 +3,31 @@
 
 using namespace std;
 
+int compare_directions(int top, int left, int diagonal, int gap, int mismatch, int match, bool is_match){
+	int result;
+	int top_acc, left_acc, diagonal_acc;
+
+	top_acc = top + gap;
+	left_acc = left + gap;
+	if (is_match)
+		diagonal_acc = diagonal + match;
+	else
+		diagonal_acc = diagonal + mismatch;
+
+	/* 
+	 * cout << " TOP = " << top_acc << "| LEFT = " << left_acc << "| DIAGONAL = " << diagonal_acc;
+	 */
+
+	if (top_acc < left_acc && top_acc < diagonal_acc)
+		result = top_acc;
+	else if (left_acc < top_acc && left_acc < diagonal_acc)
+		result = left_acc;
+	else
+		result = diagonal_acc;
+		
+	return result;
+}
+
 /*
     Gaps: onde inserimos ou removemos caracteres
     Incompatibilidades (mismatches): onde os caracteres são diferentes
@@ -18,8 +43,8 @@ using namespace std;
 
 int main(){
 
-    string X {"TATGA"};
-    string Y {"TACGA"};
+    string X {"TACGA"};
+    string Y {"TATGA"};
 
     int xAxis, yAxis;
 
@@ -49,10 +74,14 @@ int main(){
     A sequencia original deve ser "fixada" no eixo X
     A sequencia 
     */
-    for(int i=0;i<xAxis;i++){
-        for(int j=0;j<yAxis;j++){
-            // m[i][j] = 0;
-            
+    for(int i=1;i<xAxis;i++){
+        for(int j=1;j<yAxis;j++){
+            	// m[i][j] = 0;
+		bool is_match; 
+		is_match = X[i] == Y[j];
+		cout << "\nIndíce: [" << i << "]["<< j<< "]: " ;
+    		int result = compare_directions(m[i-1][j], m[i][j-1], m[i-1][j-1], gap, mismatch, match,is_match);
+		m[i][j] = result;		
         }
     }
 
