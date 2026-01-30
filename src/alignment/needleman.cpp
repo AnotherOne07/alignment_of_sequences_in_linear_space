@@ -87,6 +87,11 @@ int main(){
     yAxis = Y.length() + 1;
 
     // int m[xAxis][yAxis];
+    // em termos de alocação de memória, seria algo como:
+    // um container de containers de inteiros
+    // em relação aos parametros, o primeiro define o tamanho do container externo
+    // enquanto que o segundo cria um "template" para garantir que haverá o número
+    // correto de colunas
     vector<vector<int>> m (xAxis, vector<int>(yAxis,0));
 
     int gap=2, mismatch=1, match=0;
