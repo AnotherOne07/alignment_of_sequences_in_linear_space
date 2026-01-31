@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "needleman.h"
 
 using namespace std;
 
@@ -29,39 +30,48 @@ int compare_directions(int top, int left, int diagonal, int gap, int mismatch, i
 	return result;
 }
 
-void alignment(string X, string Y, int xAxis, int yAxis, vector<vector<int>> &m){
+Alignment_needleman backtrace(string X, string Y, int xAxis, int yAxis, vector<vector<int>> &m){
     string newX = "", newY = "";
-    int top, left;
     int i, j;
     i = xAxis;
     j = yAxis;
-    while(true){
-        if (i == 0 || j == 0)
-            break;
+    while(i > 0 || j > 0){
 
-        top = m[i-1][j];
-        left = m[i][j-1];
-
-        if (X[i-1] == Y[j-1]){
+       /* if (X[i-1] == Y[j-1]){
             newX = X[i-1] + newX;
             newY = Y[j-1] + newY;
             i = i - 1;
             j = j - 1;
-        }
-        else if (top < left){
+        }*/
+	if(
+	i>0 && j > 0 && 
+	m[i][j] == m[i-1][j-1] +
+	((X[i-1] == Y[j-1])? match : mismatch)){
+	
+		newX = X[i-1] + newX;
+		newY = Y[j-1] + newY;
+		i--;
+		j--;
+	}
+	else if (
+		// PRIORIDADE 2: TOP
+		i > 0 &&
+		m[i][j] == m[i-1][j] + gap
+		){
             newX = X[i-1] + newX;
             newY = "-" + newY; 
             i = i - 1;
         }
         else {
+		// PRIORIDADE 3: LEFT
             newX = "-" + newX;
             newY = Y[j-1] + newY;
             j = j - 1;
         }
     }
-    cout << newX << "\n";
-    cout << newY << "\n";
-    return;
+    //cout << newX << "\n";
+    //cout << newY << "\n";
+    return {newX, newY};
 }
 /*
     Gaps: onde inserimos ou removemos caracteres
@@ -76,10 +86,10 @@ void alignment(string X, string Y, int xAxis, int yAxis, vector<vector<int>> &m)
     índice de X ou Y aparece no máximo uma vez.
     */
 
-int main(){
+Alignment_needleman needleman(string X, string Y, int gap, int mismatch, int match){
 
-    string X {"TACGA"};
-    string Y {"TATGA"};
+	//string X {"TACGA"};
+	//string Y {"TATGA"};
 
     int xAxis, yAxis;
 
@@ -94,10 +104,7 @@ int main(){
     // correto de colunas
     vector<vector<int>> m (xAxis, vector<int>(yAxis,0));
 
-    int gap=2, mismatch=1, match=0;
-
-    // cout << X +  ": " << xAxis << "\n";
-    // cout << Y +  ": " << yAxis << "\n";
+    //int gap=2, mismatch=1, match=0;
 
     // Preenchendo a linha e coluna 0, que representam os gaps
     m[0][0] = 0;
@@ -119,21 +126,21 @@ int main(){
         for(int j=1;j<yAxis;j++){
             // m[i][j] = 0;
             bool is_match; 
-            is_match = X[i] == Y[j];
+            is_match = X[i-1] == Y[j-1];
             // cout << "\nIndíce: [" << i << "]["<< j<< "]: " ;
             int result = compare_directions(m[i-1][j], m[i][j-1], m[i-1][j-1], gap, mismatch, match,is_match);
             m[i][j] = result;		
             }
     }
 
+/*
+	  
     for(int i=0;i<yAxis;i++){
         for(int j=0;j<xAxis;j++){
             cout << m[j][i] << " ";
         }
         cout << "\n";
     }
-
-    alignment( X, Y, xAxis, yAxis, m);
-
-    return 0;
+*/
+    return backtrace( X, Y, xAxis, yAxis, m);
 }
