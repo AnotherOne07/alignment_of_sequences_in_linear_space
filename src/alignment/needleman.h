@@ -1,11 +1,13 @@
 #ifndef NEEDLEMAN_H
 #define NEEDLEMAN_H
-
 #include <string>
 
+using namespace std;
+
 struct Alignment_needleman {
-    std::string X;
-    std::string Y;
+	int score;
+	string X;
+	string Y;
 };
 
 Alignment_needleman needleman(

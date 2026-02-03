@@ -33,12 +33,6 @@ int compare_directions(int top, int left, int diagonal, int gap, int mismatch, i
 }
 */
 
-/*struct Alignment_needleman {
-        string X;
-        string Y;
-};*/
-
-
 Alignment_needleman backtrace(string X, string Y, int xAxis, int yAxis, vector<vector<int>> &m, int gap, int mismatch, int match){
     string newX = "", newY = "";
     int i, j;
@@ -80,7 +74,7 @@ Alignment_needleman backtrace(string X, string Y, int xAxis, int yAxis, vector<v
     }
     //cout << newX << "\n";
     //cout << newY << "\n";
-    return {newX, newY};
+    return {0,newX, newY};
 }
 /*
     Gaps: onde inserimos ou removemos caracteres
@@ -151,5 +145,9 @@ Alignment_needleman needleman(string X, string Y, int gap, int mismatch, int mat
         cout << "\n";
     }
 */
-    return backtrace( X, Y, xAxis, yAxis, m, gap, mismatch, match);
+    int opt_score = m[xAxis - 1][yAxis - 1];
+    Alignment_needleman aln = backtrace(X,Y,xAxis,yAxis,m,gap,mismatch,match);
+    aln.score = opt_score;
+    //return backtrace( X, Y, xAxis, yAxis, m, gap, mismatch, match);
+    return aln;
 }

@@ -10,21 +10,28 @@
 using namespace std;
 
 struct Alignment {
-	string X_aligned;
-	string Y_aligned;
+        int score;
+        string X_aligned;
+        string Y_aligned;
 };
 
 Alignment convert_typo(Alignment_needleman subs){
-	return {subs.X, subs.Y};
+	return {subs.score, subs.X, subs.Y};
 }
 
 // Algoritmo de Hirschberg utilizando programação dinâmica e divisão e conquista
 Alignment divide_and_conquer_alignment(string X, string Y, int gap, int mismatch, int match){
 
     if (X.empty())
-	    return {string(Y.length(), '-'), Y};
+	    return {
+		    static_cast<int>(Y.length()) * gap, // necessário realizar o casting pois string.length() retorna um long int
+		    string(Y.length(), '-'),
+		    Y};
     if (Y.empty())
-	    return {X, string(X.length(), '-')};
+	    return {
+		    static_cast<int>(X.length()) * gap,
+		    X, 
+		    string(X.length(), '-')};
 
     if (X.length() == 1 || Y.length() == 1)
 	    return convert_typo(needleman(X, Y, gap, mismatch, match));
@@ -35,18 +42,19 @@ Alignment divide_and_conquer_alignment(string X, string Y, int gap, int mismatch
 
     // Meio da matriz
     int k = X.length()/2;
+    int mid = Y.length()/2;
    
     // Criando as substrings dos subproblemas
     string X1 = X.substr(0,k);
     string X2 = X.substr(k);
 
     // Utilizando a estratégia de programação dinâmica
-    vector<int> F = space_efficient_alignment(X,X1,gap,mismatch,match);
-    vector<int> G = backward_space_efficient_alignment(X,X2,gap,mismatch,match);
+    vector<int> F = space_efficient_alignment(X,Y.substr(0,mid),gap,mismatch,match);
+    vector<int> G = backward_space_efficient_alignment(X,Y.substr(mid),gap,mismatch,match);
     
     // Encontrando onde há o cruzamento do caminho ótimo para otimizar o custo total
     int q_star = 0;
-    int best = F[0] + G[Y.length()];
+    int best = F[0] + G[X.length()];
     for(int q = 1; q <= Y.length(); q++){
     	int cost = F[q] + G[Y.length() - q];
 	if (cost < best) {
@@ -55,11 +63,12 @@ Alignment divide_and_conquer_alignment(string X, string Y, int gap, int mismatch
 	}
     }
 
-    Alignment left_alignment = divide_and_conquer_alignment(X.substr(0,k), Y.substr(0,q_star), gap, mismatch, match);
-    Alignment right_alignment = divide_and_conquer_alignment(X.substr(k), Y.substr(q_star), gap, mismatch, match);
+    Alignment left_alignment = divide_and_conquer_alignment(X.substr(0,q_star), Y.substr(0,mid), gap, mismatch, match);
+    Alignment right_alignment = divide_and_conquer_alignment(X.substr(q_star), Y.substr(mid), gap, mismatch, match);
    
     return{
-    	left_alignment.X_aligned + right_alignment.X_aligned,
+    	left_alignment.score + right_alignment.score,
+	left_alignment.X_aligned + right_alignment.X_aligned,
 	left_alignment.Y_aligned + right_alignment.Y_aligned
     };
 }
@@ -72,6 +81,7 @@ int main(){
 	cin >> Y;
 	int gap = 2, mismatch = 1, match = 0;
 	Alignment result = divide_and_conquer_alignment(X,Y,gap,mismatch,match);
+	cout << result.score << endl;
 	cout << result.X_aligned << endl;
 	cout << result.Y_aligned << endl;
 	return 0;
