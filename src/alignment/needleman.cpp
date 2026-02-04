@@ -3,56 +3,23 @@
 #include <vector>
 #include "../utils/alignment.h"
 #include "needleman.h"
+#include <algorithm>
 
 using namespace std;
 
-/*
-int compare_directions(int top, int left, int diagonal, int gap, int mismatch, int match, bool is_match){
-	int result;
-	int top_acc, left_acc, diagonal_acc;
-
-	top_acc = top + gap;
-	left_acc = left + gap;
-	if (is_match)
-		diagonal_acc = diagonal + match;
-	else
-		diagonal_acc = diagonal + mismatch;
-
-	 
-	 cout << " TOP = " << top_acc << "| LEFT = " << left_acc << "| DIAGONAL = " << diagonal_acc;
-	
-
-	if (top_acc < left_acc && top_acc < diagonal_acc)
-		result = top_acc;
-	else if (left_acc < top_acc && left_acc < diagonal_acc)
-		result = left_acc;
-	else
-		result = diagonal_acc;
-		
-	return result;
-}
-*/
-
-Alignment_needleman backtrace(string X, string Y, int xAxis, int yAxis, vector<vector<int>> &m, int gap, int mismatch, int match){
+AlignmentResult backtrace(string X, string Y, int rows, int cols, vector<vector<int>> &m, int gap, int mismatch, int match){
     string newX = "", newY = "";
     int i, j;
-    i = xAxis - 1;
-    j = yAxis - 1;
+    i = rows;
+    j = cols;
     while(i > 0 || j > 0){
-
-       /* if (X[i-1] == Y[j-1]){
-            newX = X[i-1] + newX;
-            newY = Y[j-1] + newY;
-            i = i - 1;
-            j = j - 1;
-        }*/
 	if(
 	i>0 && j > 0 && 
-	m[i][j] == m[i-1][j-1] +
-	((X[i-1] == Y[j-1])? match : mismatch)){
+	m[i][j] == m[i-1][j-1] + // a condional verifica se o score atual é "consequência" do custo da anterior
+	((X[i-1] == Y[j-1])? match : mismatch)){ 
 	
-		newX = X[i-1] + newX;
-		newY = Y[j-1] + newY;
+		newX += X[i-1];
+		newY += Y[j-1];
 		i--;
 		j--;
 	}
@@ -61,20 +28,22 @@ Alignment_needleman backtrace(string X, string Y, int xAxis, int yAxis, vector<v
 		i > 0 &&
 		m[i][j] == m[i-1][j] + gap
 		){
-            newX = X[i-1] + newX;
-            newY = "-" + newY; 
-            i = i - 1;
+            newX += X[i-1];
+            newY +=  "-"; 
+            i--;
         }
         else {
 		// PRIORIDADE 3: LEFT
-            newX = "-" + newX;
-            newY = Y[j-1] + newY;
-            j = j - 1;
+            newX += "-";
+            newY += Y[j-1];
+            j--;
         }
     }
-    //cout << newX << "\n";
-    //cout << newY << "\n";
-    return {0,newX, newY};
+    
+    reverse(newX.begin(), newX.end());
+    reverse(newY.begin(), newY.end());
+
+    return {m[rows][cols], newX, newY};
 }
 /*
     Gaps: onde inserimos ou removemos caracteres
@@ -89,65 +58,45 @@ Alignment_needleman backtrace(string X, string Y, int xAxis, int yAxis, vector<v
     índice de X ou Y aparece no máximo uma vez.
     */
 
-Alignment_needleman needleman(string X, string Y, int gap, int mismatch, int match){
+AlignmentResult needleman(string X, string Y, int gap, int mismatch, int match){
+    // O tamanho da matriz será definido pelo tamanho das cadeias
+    int rows = X.length();
+    int cols = Y.length();
 
-	//string X {"TACGA"};
-	//string Y {"TATGA"};
-
-    int xAxis, yAxis;
-
-    xAxis = X.length() + 1;
-    yAxis = Y.length() + 1;
-
-    // int m[xAxis][yAxis];
+    // int m[rows][cols];
     // em termos de alocação de memória, seria algo como:
     // um container de containers de inteiros
     // em relação aos parametros, o primeiro define o tamanho do container externo
     // enquanto que o segundo cria um "template" para garantir que haverá o número
     // correto de colunas
-    vector<vector<int>> m (xAxis, vector<int>(yAxis,0));
+    vector<vector<int>> m (rows+1, vector<int>(cols+1)); // precisa ter um "espaço de sobra" para os gaps
 
     //int gap=2, mismatch=1, match=0;
 
     // Preenchendo a linha e coluna 0, que representam os gaps
-    m[0][0] = 0;
-    for (int i = 1; i < xAxis; i++)
-    {
-        m[i][0] = m[i-1][0] + gap; 
+    for (int i = 0; i <= rows; i++){
+        m[i][0] = i * gap; 
     }
-    
-    for (int i = 1;i < yAxis;i++){
-        m[0][i] = m[0][i-1] + gap;
+    for (int i = 0;i <= cols;i++){
+        m[0][i] = i * gap;
     }
     
     
     /* 
     A sequencia original deve ser "fixada" no eixo X
-    A sequencia 
+    Preenchimento da matriz de alinhamento, considerando a ordem de prioridade top -> left
     */
-    for(int i=1;i<xAxis;i++){
-        for(int j=1;j<yAxis;j++){
-            // m[i][j] = 0;
-            bool is_match; 
-            is_match = X[i-1] == Y[j-1];
-            // cout << "\nIndíce: [" << i << "]["<< j<< "]: " ;
-            int result = compare_directions(m[i-1][j], m[i][j-1], m[i-1][j-1], gap, mismatch, match,is_match);
-            m[i][j] = result;		
+    int diagonal,top,left,cost;
+    for(int i=1;i<=rows;i++){
+        for(int j=1;j<=cols;j++){
+            	cost = X[i-1] == Y[j-1] ? match : mismatch; // custo da operação (match ou mismatch)
+		diagonal = m[i -1][j-1] + cost;
+		top = m[i-1][j] + gap; // alinhar X[i] com -
+		left = m[i][j-1] + gap; // alinhar - com Y[j]
+            	//int result = compare_directions(m[i-1][j], m[i][j-1], m[i-1][j-1], gap, mismatch, match,is_match);
+            	m[i][j] = min({diagonal,top,left});		
             }
     }
-
-/*
-	  
-    for(int i=0;i<yAxis;i++){
-        for(int j=0;j<xAxis;j++){
-            cout << m[j][i] << " ";
-        }
-        cout << "\n";
-    }
-*/
-    int opt_score = m[xAxis - 1][yAxis - 1];
-    Alignment_needleman aln = backtrace(X,Y,xAxis,yAxis,m,gap,mismatch,match);
-    aln.score = opt_score;
-    //return backtrace( X, Y, xAxis, yAxis, m, gap, mismatch, match);
-    return aln;
+    
+    return backtrace(X,Y,rows,cols,m,gap,mismatch,match);
 }
