@@ -1,4 +1,5 @@
 # Alinhamento de sequências em espaço linear
+Link YT: https://youtu.be/GppsMSFFP8Y
 Desenvolvimento do algoritmo de Hirschberg para resolver problema de alinhamento de sequências.
 
 ## Contextualização
